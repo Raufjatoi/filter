@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Filter Application</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #e0f7e9;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            min-height: 100vh;
+            color: #2e7d32;
+            position: relative;
+        }
+        header, footer {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: #1b5e20;
+            color: white;
+        }
+        header h1 {
+            margin: 0;
+        }
+        header img {
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+        }
+        footer {
+            justify-content: center;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 10px;
+            background-color: #1b5e20;
+            text-align: center;
+            z-index: 2;
+        }
+        footer a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            padding: 20px;
+            box-sizing: border-box;
+            position: relative;
+            z-index: 1;
+        }
+        #upload {
+            margin-top: 20px;
+        }
+        #controls {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            background-color: #2e7d32;
+            color: white;
+        }
+        button:hover {
+            background-color: #1b5e20;
+        }
+        canvas {
+            margin-top: 20px;
+            max-width: 100%;
+            height: auto;
+            border: 2px solid #2e7d32;
+            border-radius: 10px;
+        }
+        #download {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            background-color: #2e7d32;
+            color: white;
+        }
+        #download:hover {
+            background-color: #1b5e20;
+        }
+        .contributor {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            display: flex;
+            align-items: center;
+            z-index: 2;
+            color: white;
+            opacity: 0.8;
+        }
+        .contributor img {
+            width: 35px;
+            height: 35x;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        .contributor p {
+            margin: 0;
+            font-size: 16px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Image Filter Application</h1>
+        <img src="IMG_0392.JPG" alt="Profile Picture"> 
+        
+    </header>
+    <main>
+        <input type="file" id="upload" accept="image/*">
+        <div id="controls">
+            <button onclick="applyFilter('grayscale')">Grayscale</button>
+            <button onclick="applyFilter('sepia')">Sepia</button>
+            <button onclick="applyFilter('blur')">Blur</button>
+            <button onclick="applyFilter('pixelate')">Pixelate</button>
+            <button onclick="applyFilter('neon')">Neon</button>
+            <button onclick
+            ="applyFilter('invert')">Invert</button>
+            <button onclick="applyFilter('brightness')">Brightness</button>
+            <button onclick="applyFilter('contrast')">Contrast</button>
+            <button onclick="applyFilter('colorful')">Colorful</button>
+        </div>
+        <canvas id="canvas"></canvas>
+        <button id="download" onclick="downloadImage()">Download Edited Image</button>
+    </main>
+    <footer>
+        <a href="https://doin-somethin-raufs-projects-c9139f72.vercel.app/" target="_blank">by Rauf and Ahsan </a>
+        <div class="contributor">
+            <img src="WhatsApp Image 2024-06-01 at 9.17.44 PM.jpeg" alt="Contributor Picture">
+            <p>Contributed by Ahsan</p>
+        </div>
+    </footer>
+
+    <script>
+        const upload = document.getElementById('upload');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let originalImage = null;
+
+        upload.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    const aspectRatio = img.width / img.height;
+                    let newWidth, newHeight;
+
+                    if (img.width > img.height) {
+                        newWidth = 250;
+                        newHeight = 250 / aspectRatio;
+                    } else {
+                        newHeight = 250;
+                        newWidth = 250 * aspectRatio;
+                    }
+
+                    canvas.width = newWidth;
+                    canvas.height = newHeight;
+                    ctx.drawImage(img, 0, 0, newWidth, newHeight);
+                    originalImage = ctx.getImageData(0, 0, newWidth, newHeight);
+                };
+                img.src = e.target.result;
+            };
+
+            reader.readAsDataURL(file);
+        });
+
+        function applyFilter(filter) {
+            if (!originalImage) return;
+
+            ctx.putImageData(originalImage, 0, 0);
+            switch (filter) {
+                case 'grayscale':
+                    ctx.filter = 'grayscale(100%)';
+                    break;
+                case 'sepia':
+                    ctx.filter = 'sepia(100%)';
+                    break;
+                case 'blur':
+                    ctx.filter = 'blur(5px)';
+                    break;
+                case 'pixelate':
+                    pixelate();
+                    return;
+                case 'neon':
+                    neon();
+                    return;
+                case 'invert':
+                    ctx.filter = 'invert(100%)';
+                    break;
+                case 'brightness':
+                    ctx.filter = 'brightness(150%)';
+                    break;
+                case 'contrast':
+                    ctx.filter = 'contrast(200%)';
+                    break;
+                case 'colorful':
+                    addColor();
+                    return;
+            }
+            ctx.drawImage(canvas, 0, 0, canvas.width, canvas.height);
+            ctx.filter = 'none';
+        }
+
+        function pixelate() {
+            const size = 10;
+            for (let y = 0; y < canvas.height; y += size) {
+                for (let x = 0; x < canvas.width; x += size) {
+                    const pixel = ctx.getImageData(x, y, 1, 1);
+                    ctx.fillStyle = `rgb(${pixel.data[0]}, ${pixel.data[1]}, ${pixel.data[2]})`;
+                    ctx.fillRect(x, y, size, size);
+                }
+            }
+        }
+
+        function neon() {
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+
+            for (let i = 0; i < data.length; i += 4) {
+                const brightness = (data[i] + data[i + 1] + data[i + 2]) / 3;
+                data[i] = brightness * 2; // Red
+                data[i + 1] = brightness * 0.5; // Green
+                data[i + 2] = brightness * 4; // Blue
+            }
+
+            ctx.putImageData(imageData, 0, 0);
+        }
+
+        function addColor() {
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+
+            for (let i = 0; i < data.length; i += 4) {
+                // Modify the pixel values to add color
+                data[i] = data[i] * 2; // Red
+                data[i + 1] = data[i + 1] * 2; // Green
+                data[i + 2] = data[i + 2] * 2; // Blue
+            }
+
+            ctx.putImageData(imageData, 0, 0);
+        }
+
+        function downloadImage() {
+            const link = document.createElement('a');
+            link.download = 'edited_image.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+    </script>
+</body>
+</html>

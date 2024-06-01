@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Filter Application</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            min-height: 100vh;
+        }
+        h1 {
+            color: #333;
+        }
+        #upload {
+            margin-top: 20px;
+        }
+        #controls {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #ddd;
+        }
+        canvas {
+            margin-top: 20px;
+            max-width: 100%;
+            height: auto;
+            border: 2px solid #ccc;
+            border-radius: 10px;
+        }
+        #download {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            background-color: #007BFF;
+            color: white;
+        }
+        #download:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>Image Filter Application</h1>
+    <input type="file" id="upload" accept="image/*">
+    <div id="controls">
+        <button onclick="applyFilter('grayscale')">Grayscale</button>
+        <button onclick="applyFilter('sepia')">Sepia</button>
+        <button onclick="applyFilter('blur')">Blur</button>
+        <button onclick="applyFilter('pixelate')">Pixelate</button>
+        <button onclick="applyFilter('neon')">Neon</button>
+        <button onclick="applyFilter('invert')">Invert</button>
+        <button onclick="applyFilter('brightness')">Brightness</button>
+        <button onclick="applyFilter('contrast')">Contrast</button>
+    </div>
+    <canvas id="canvas"></canvas>
+    <button id="download" onclick="downloadImage()">Download Edited Image</button>
+
+    <script>
+        const upload = document.getElementById('upload');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let originalImage = null;
+
+        upload.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    ctx.drawImage(img, 0, 0);
+                    originalImage = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                }
+                img.src = e.target.result;
+            }
+
+            reader.readAsDataURL(file);
+        });
+
+        function applyFilter(filter) {
+            if (!originalImage) return;
+
+            ctx.putImageData(originalImage, 0, 0);
+            switch (filter) {
+                case 'grayscale':
+                    ctx.filter = 'grayscale(100%)';
+                    break;
+                case 'sepia':
+                    ctx.filter = 'sepia(100%)';
+                    break;
+                case 'blur':
+                    ctx.filter = 'blur(5px)';
+                    break;
+                case 'pixelate':
+                    pixelate();
+                    return;
+                case 'neon':
+                    neon();
+                    return;
+                case 'invert':
+                    ctx.filter = 'invert(100%)';
+                    break;
+                case 'brightness':
+                    ctx.filter = 'brightness(150%)';
+                    break;
+                case 'contrast':
+                    ctx.filter = 'contrast(200%)';
+                    break;
+                default:
+                    ctx.filter = 'none';
+            }
+            ctx.drawImage(canvas, 0, 0);
+            ctx.filter = 'none'; // Reset filter
+        }
+
+        function pixelate() {
+            const size = 10; // Size of the pixels
+            for (let y = 0; y < canvas.height; y += size) {
+                for (let x = 0; x < canvas.width; x += size) {
+                    const p = ctx.getImageData(x, y, size, size).data;
+                    const r = p[0], g = p[1], b = p[2];
+                    ctx.fillStyle = `rgb(${r},${g},${b})`;
+                    ctx.fillRect(x, y, size, size);
+                }
+            }
+        }
+
+        function neon() {
+            ctx.filter = 'contrast(200%) brightness(150%)';
+            ctx.drawImage(canvas, 0, 0);
+            ctx.filter = 'none';
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < imageData.data.length; i += 4) {
+                imageData.data[i] = 255 - imageData.data[i]; // Red
+                imageData.data[i + 1] = 255 - imageData.data[i + 1]; // Green
+                imageData.data[i + 2] = 255 - imageData.data[i + 2]; // Blue
+            }
+            ctx.putImageData(imageData, 0, 0);
+        }
+
+        function downloadImage() {
+            const link = document.createElement('a');
+            link.download = 'edited-image.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+    </script>
+</body>
+</html>
